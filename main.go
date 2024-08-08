@@ -25,6 +25,7 @@ func init() {
 }
 
 func main() {
+	http.HandleFunc("/health", healthCheckHandler)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/login", loginHandler)
 	fmt.Println("Starting server at port 8080")
