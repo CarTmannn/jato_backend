@@ -33,3 +33,12 @@ func main() {
 		log.Fatalf("Error starting server: %v", err)
 	}
 }
+
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	if err := db.Ping(); err != nil {
+		http.Error(w, "Database connection failed", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
