@@ -28,7 +28,7 @@ func main() {
 	http.HandleFunc("/health", healthCheckHandler)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/checkEmail", checkEmailExists)
+	http.HandleFunc("/checkEmail", checkEmailAndUsernameExists)
 	fmt.Println("Starting server at port 8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("Error starting server: %v", err)
