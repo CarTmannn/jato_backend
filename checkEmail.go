@@ -7,16 +7,18 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type EmailRequest struct {
-	Email string `json:"email"`
+type CheckRequest struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
 }
 
 type Response struct {
-	Exists bool `json:"exists"`
+	EmailExists    bool `json:"email"`
+	UsernameExists bool `json:"username"`
 }
 
-func checkEmailExists(w http.ResponseWriter, r *http.Request) {
-	var req EmailRequest
+func checkEmailAndUsernameExists(w http.ResponseWriter, r *http.Request) {
+	var req CheckRequest
 	var response Response
 
 	// Decode JSON request
@@ -26,32 +28,36 @@ func checkEmailExists(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if email exists in user table
+	// Check if email exists in user or builder table
 	var count int
 	err = db.QueryRow("SELECT COUNT(*) FROM user WHERE email = ?", req.Email).Scan(&count)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+	response.EmailExists = count > 0
 
-	if count > 0 {
-		response.Exists = true
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-
-	// Check if email exists in builder table
 	err = db.QueryRow("SELECT COUNT(*) FROM builder WHERE email = ?", req.Email).Scan(&count)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+	response.EmailExists = response.EmailExists || count > 0
 
-	if count > 0 {
-		response.Exists = true
-	} else {
-		response.Exists = false
+	// Check if username exists in user or builder table
+	err = db.QueryRow("SELECT COUNT(*) FROM user WHERE username = ?", req.Username).Scan(&count)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
 	}
+	response.UsernameExists = count > 0
+
+	err = db.QueryRow("SELECT COUNT(*) FROM builder WHERE username = ?", req.Username).Scan(&count)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	response.UsernameExists = response.UsernameExists || count > 0
 
 	// Return response
 	json.NewEncoder(w).Encode(response)
